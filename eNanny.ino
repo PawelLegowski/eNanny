@@ -11,13 +11,16 @@ ESP8266WebServer server(80);
  * connected to this access point to see it.
  */
 void handleRoot() {
-	server.send(200, "text/html", "SSID:<br><input type=\"text\" name=\"SSID\"><br>PASSWORD:<br><input type=\"text\" name=\"PASSWORD\"><br><button href=\"/login\">OK</button>");
+  server.send(200, "text/html", "<form method=\"post\" action=\"login\">SSID:<br><input name=\"ssid\"><br>Password:<br><input name=\"password\"><br><input type=\"submit\" value=\"Save\"></form>");
 }
 
 void handleLogin()
 {
   String ssid = server.arg("ssid");
-  Serial.print(ssid);
+  Serial.println(ssid);
+  String password = server.arg("password");
+  Serial.println(password);
+  server.send(200, "text/html", "Data Saved!");
 }
 
 void setup() {
