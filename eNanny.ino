@@ -41,33 +41,6 @@ void setSetupMode(bool bIsSetupMode)
 }
 
 
-//--- __      _____ ___   ___ ___ _____   _____ ___  ---
-//--- \ \    / / __| _ ) / __| __| _ \ \ / / __| _ \ ---
-//---  \ \/\/ /| _|| _ \ \__ \ _||   /\ V /| _||   / ---
-//---   \_/\_/ |___|___/ |___/___|_|_\ \_/ |___|_|_\ ---
-/* Go to http://192.168.4.1 in a web browser */ 
-void handleRoot() {
-  //sending HTML website with input form
-  server.send(200, "text/html", "<form method=\"post\" action=\"login\">SSID:<br><input name=\"ssid\"><br>Password:<br><input name=\"password\"><br><input type=\"submit\" value=\"Save\"></form>");
-}
-
-void handleLogin()
-{
-  ssid = server.arg("ssid");  
-  password = server.arg("password");
-  
-  Serial.println(ssid);
-  Serial.println(password);
-
-  EEPROM_writeSSID(ssid);
-  EEPROM_writePassword(password);   
-  EEPROM.commit();
-  //sending HTML website with confirmation
-  server.send(200, "text/html", "Data Saved!");
-  setSetupMode(false);
-}
-
-
 //---  ___ ___ ___ ___  ___  __  __  ---
 //--- | __| __| _ \ _ \/ _ \|  \/  | ---
 //--- | _|| _||  _/   / (_) | |\/| | ---
@@ -119,6 +92,33 @@ void EEPROM_writePassword(String aPassword)
     EEPROM.put(i+65, ssid[i]);
   }
 }
+
+//--- __      _____ ___   ___ ___ _____   _____ ___  ---
+//--- \ \    / / __| _ ) / __| __| _ \ \ / / __| _ \ ---
+//---  \ \/\/ /| _|| _ \ \__ \ _||   /\ V /| _||   / ---
+//---   \_/\_/ |___|___/ |___/___|_|_\ \_/ |___|_|_\ ---
+/* Go to http://192.168.4.1 in a web browser */ 
+void handleRoot() {
+  //sending HTML website with input form
+  server.send(200, "text/html", "<form method=\"post\" action=\"login\">SSID:<br><input name=\"ssid\"><br>Password:<br><input name=\"password\"><br><input type=\"submit\" value=\"Save\"></form>");
+}
+
+void handleLogin()
+{
+  ssid = server.arg("ssid");  
+  password = server.arg("password");
+  
+  Serial.println(ssid);
+  Serial.println(password);
+
+  EEPROM_writeSSID(ssid);
+  EEPROM_writePassword(password);   
+  EEPROM.commit();
+  //sending HTML website with confirmation
+  server.send(200, "text/html", "Data Saved!");
+  setSetupMode(false);
+}
+
 
 
 //---  __  __   _   ___ _  _   ___ _    _____      __ ---
