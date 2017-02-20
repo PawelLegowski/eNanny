@@ -40,35 +40,6 @@ void setSetupMode(bool bIsSetupMode)
     Serial.println(WiFi.localIP());
   }
 }
-
-
-//--- __      _____ ___   ___ ___ _____   _____ ___  ---
-//--- \ \    / / __| _ ) / __| __| _ \ \ / / __| _ \ ---
-//---  \ \/\/ /| _|| _ \ \__ \ _||   /\ V /| _||   / ---
-//---   \_/\_/ |___|___/ |___/___|_|_\ \_/ |___|_|_\ ---
-/* Go to http://192.168.4.1 in a web browser */ 
-void handleRoot() {
-  //sending HTML website with input form
-  server.send(200, "text/html", "<form method=\"post\" action=\"login\">SSID:<br><input name=\"ssid\"><br>Password:<br><input name=\"password\"><br><input type=\"submit\" value=\"Save\"></form>");
-}
-
-void handleLogin()
-{
-  ssid = server.arg("ssid");  
-  password = server.arg("password");
-  
-  Serial.println(ssid);
-  Serial.println(password);
-
-  EEPROM_writeSSID(ssid);
-  EEPROM_writePassword(password);   
-  EEPROM.commit();
-  //sending HTML website with confirmation
-  server.send(200, "text/html", "Data Saved!");
-  setSetupMode(false);
-}
-
-
 //---  ___ ___ ___ ___  ___  __  __  ---
 //--- | __| __| _ \ _ \/ _ \|  \/  | ---
 //--- | _|| _||  _/   / (_) | |\/| | ---
@@ -121,6 +92,63 @@ void EEPROM_writePassword(String aPassword)
   }
 }
 
+//--- __      _____ ___   ___ ___ _____   _____ ___  ---
+//--- \ \    / / __| _ ) / __| __| _ \ \ / / __| _ \ ---
+//---  \ \/\/ /| _|| _ \ \__ \ _||   /\ V /| _||   / ---
+//---   \_/\_/ |___|___/ |___/___|_|_\ \_/ |___|_|_\ ---
+/* Go to http://192.168.4.1 in a web browser */ 
+void handleRoot() {
+  //sending HTML website with input form
+
+ //--look for avalible networks - hubert 20-02-17
+
+  // WiFi.scanNetworks will return the number of networks found
+  String box = "<select name=\"ssid\"><option selected=\"selected\" value=\"\">Select Network</option>";
+String option = "";
+String endbox = "</select>"; 
+
+  int n = WiFi.scanNetworks();
+  if (n == 0)
+    Serial.println("no networks found");
+  else
+  {
+    for (int i = 0; i < n; ++i)
+    {
+      // Print SSID and RSSI for each network found
+    option = option + "<option value=\"" + WiFi.SSID(i) + "\">"+ WiFi.SSID(i) + "</option>";
+    
+      delay(10);
+    }
+  }
+
+  
+  //--end
+ 
+ String networkList =box+option+endbox;
+  String NetworkSelectForm = "<form method=\"post\" action=\"login\">SSID:<br>" + networkList + "<br>Password:<br><input name=\"password\"><br><input type=\"submit\" value=\"Save\"></form><br>";
+  server.send(200, "text/html", NetworkSelectForm);
+}
+
+void handleLogin()
+{
+  ssid = server.arg("ssid");  
+  password = server.arg("password");
+  
+  Serial.println(ssid);
+  Serial.println(password);
+
+  EEPROM_writeSSID(ssid);
+  EEPROM_writePassword(password);   
+  EEPROM.commit();
+  //sending HTML website with confirmation
+  String DataRecieved = "Saved network:" + ssid + " pass:" +  password;
+  server.send(200, "text/html", DataRecieved);
+  setSetupMode(false);
+}
+
+
+
+
 
 //---  __  __   _   ___ _  _   ___ _    _____      __ ---
 //--- |  \/  | /_\ |_ _| \| | | __| |  / _ \ \    / / ---
@@ -129,6 +157,16 @@ void EEPROM_writePassword(String aPassword)
 void setup() {  
   delay(1000);
   Serial.begin(115200);
+
+//--look for avalible networks - hubert 20-02-17
+// Set WiFi to station mode and disconnect from an AP if it was previously connected
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
+  delay(100);
+
+  Serial.println("Setup done");
+
+//--end
   
   EEPROM.begin(512);  
   ssid                = EEPROM_readSSID();
@@ -151,5 +189,11 @@ void setup() {
 }
 
 void loop() {
+  
+ 
+
+  
 	server.handleClient();
+
+  
 }
