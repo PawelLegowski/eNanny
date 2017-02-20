@@ -11,6 +11,7 @@ bool          isSetupMode       = false;
 bool          test              = HIGH;
 ESP8266WebServer server(80);
 
+
 //--- __      ___ ___ _  ---
 //--- \ \    / (_) __(_) ---
 //---  \ \/\/ /| | _|| | ---
@@ -41,58 +42,6 @@ void setSetupMode(bool bIsSetupMode)
 }
 
 
-//---  ___ ___ ___ ___  ___  __  __  ---
-//--- | __| __| _ \ _ \/ _ \|  \/  | ---
-//--- | _|| _||  _/   / (_) | |\/| | ---
-//--- |___|___|_| |_|_\\___/|_|  |_| ---                        
-String EEPROM_readSSID()
-{
-  char strln;
-  char letter;  
-  String ans = "";
-  EEPROM.get(0, strln);
-  for(char i = 0 ; i < strln; i++)
-  {
-    EEPROM.get(i+1, letter);
-    ans += letter;
-  }
-  return ans;
-}
-
-void EEPROM_writeSSID(String aSSID)
-{
-  char strln = ssid.length();  
-  EEPROM.put(0, strln);
-  for(char i = 0; i < strln; i++)
-  {
-    EEPROM.put(i+1, ssid[i]);
-  }
-}
-
-String EEPROM_readPassword()
-{
-  char strln;
-  char letter;  
-  String ans = "";
-  EEPROM.get(64, strln);
-  for(char i = 0 ; i < strln; i++)
-  {
-    EEPROM.get(i+65, letter);
-    ans += letter;
-  }
-  return ans;
-}
-
-void EEPROM_writePassword(String aPassword)
-{
-  char strln = ssid.length();  
-  EEPROM.put(64, strln);
-  for(char i = 0; i < strln; i++)
-  {
-    EEPROM.put(i+65, ssid[i]);
-  }
-}
-
 //--- __      _____ ___   ___ ___ _____   _____ ___  ---
 //--- \ \    / / __| _ ) / __| __| _ \ \ / / __| _ \ ---
 //---  \ \/\/ /| _|| _ \ \__ \ _||   /\ V /| _||   / ---
@@ -119,6 +68,58 @@ void handleLogin()
   setSetupMode(false);
 }
 
+
+//---  ___ ___ ___ ___  ___  __  __  ---
+//--- | __| __| _ \ _ \/ _ \|  \/  | ---
+//--- | _|| _||  _/   / (_) | |\/| | ---
+//--- |___|___|_| |_|_\\___/|_|  |_| ---                        
+String EEPROM_readSSID()
+{
+  char strln;
+  char letter;  
+  String ans = "";
+  EEPROM.get(0, strln);
+  for(char i = 0 ; i < strln; i++)
+  {
+    EEPROM.get(i+1, letter);
+    ans += letter;
+  }
+  return ans;
+}
+
+void EEPROM_writeSSID(String aSSID)
+{
+  char strln = aSSID.length();  
+  EEPROM.put(0, strln);
+  for(char i = 0; i < strln; i++)
+  {
+    EEPROM.put(i+1, aSSID[i]);
+  }
+}
+
+String EEPROM_readPassword()
+{
+  char strln;
+  char letter;  
+  String ans = "";
+  EEPROM.get(64, strln);
+  for(char i = 0 ; i < strln; i++)
+  {
+    EEPROM.get(i+65, letter);
+    ans += letter;
+  }
+  return ans;
+}
+
+void EEPROM_writePassword(String aPassword)
+{
+  char strln = aPassword.length();  
+  EEPROM.put(64, strln);
+  for(char i = 0; i < strln; i++)
+  {
+    EEPROM.put(i+65, aPassword[i]);
+  }
+}
 
 
 //---  __  __   _   ___ _  _   ___ _    _____      __ ---
