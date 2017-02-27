@@ -10,6 +10,9 @@ String        password          = "";
 bool          isSetupMode       = false;
 bool          isServerReady     = false;
 ESP8266WebServer server(80);
+IPAddress eNannyStaticIP(192,168,0,111);
+IPAddress gateway(192,168,0,1);
+IPAddress mask(255,255,255,0);
 
 void setSetupMode(bool bIsSetupMode);
 
@@ -151,12 +154,12 @@ void setupServer()
 //---   \_/\_/ |_|_| |_| ---               
 void setSetupMode(bool bIsSetupMode)
 {
-  WiFi.mode(WIFI_STA);
   WiFi.softAPdisconnect();
   WiFi.disconnect();
+  WiFi.mode(WIFI_STA);
   if(bIsSetupMode)
   {
-    setupServer();
+    WiFi.softAPConfig(eNannyStaticIP, gateway, mask);   
     WiFi.softAP(SETUP_SSID);  
   }
   else
@@ -165,7 +168,8 @@ void setSetupMode(bool bIsSetupMode)
 
     Serial.println("CONNECTING");
     Serial.println(ssid.c_str());
-    Serial.println(password.c_str());
+    Serial.println(password.c_str()); 
+    WiFi.config(eNannyStaticIP, gateway, mask);   
     WiFi.begin(ssid.c_str(), password.c_str());
     while (WiFi.status() != WL_CONNECTED) {
       delay(500);
@@ -219,8 +223,8 @@ void setup() {
   ssid                = EEPROM_readSSID();
   password            = EEPROM_readPassword();
 
-setSetupMode(EEPROM_isInitialised() == false);
-  
+  setSetupMode(EEPROM_isInitialised() == false);
+  setupServer();
 }
 void loop() {
       server.handleClient();
