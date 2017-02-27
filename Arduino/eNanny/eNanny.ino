@@ -8,7 +8,6 @@ const char*   SETUP_SSID        = "eNanny";
 String        ssid              = "";
 String        password          = "";
 bool          isSetupMode       = false;
-bool          isServerReady     = false;
 ESP8266WebServer server(80);
 IPAddress eNannyStaticIP(192,168,0,111);
 IPAddress gateway(192,168,0,1);
@@ -138,14 +137,10 @@ void handleLogin()
 }
 
 void setupServer()
-{
-  if(isServerReady == false)
-  {
-    server.on("/", handleRoot);
-    server.on("/login", handleLogin);
-    server.begin();
-    isServerReady = true;
-  }
+{  
+  server.on("/", handleRoot);
+  server.on("/login", handleLogin);
+  server.begin();
 }
 
 //--- __      ___ ___ _  ---
