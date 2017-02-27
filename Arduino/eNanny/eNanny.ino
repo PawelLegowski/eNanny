@@ -8,42 +8,26 @@ const char*   SETUP_SSID        = "eNanny";
 String        ssid              = "";
 String        password          = "";
 bool          isSetupMode       = false;
-bool          test              = HIGH;
+bool          isServerReady     = false;
 ESP8266WebServer server(80);
 
+void setSetupMode(bool bIsSetupMode);
 
-//--- __      ___ ___ _  ---
-//--- \ \    / (_) __(_) ---
-//---  \ \/\/ /| | _|| | ---
-//---   \_/\_/ |_|_| |_| ---               
-void setSetupMode(bool bIsSetupMode)
-{
-  WiFi.softAPdisconnect();
-  WiFi.disconnect();
-  if(bIsSetupMode)
-  {
-    WiFi.softAP(SETUP_SSID);  
-  }
-  else
-  {    
-    Serial.println("CONNECTING");
-    Serial.println(ssid.c_str());
-    Serial.println(password.c_str());
-    WiFi.begin(ssid.c_str(), password.c_str());
-    while (WiFi.status() != WL_CONNECTED) {
-      delay(500);
-      Serial.print(".");
-    }
-    Serial.println("");
-    Serial.println("WiFi connected");  
-    Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
-  }
-}
 //---  ___ ___ ___ ___  ___  __  __  ---
 //--- | __| __| _ \ _ \/ _ \|  \/  | ---
 //--- | _|| _||  _/   / (_) | |\/| | ---
-//--- |___|___|_| |_|_\\___/|_|  |_| ---                        
+//--- |___|___|_| |_|_\\___/|_|  |_| ---   
+bool EEPROM_isInitialised()
+{
+  return EEPROM.read(200) == 1;
+}
+
+void EEPROM_setInitialised()
+{
+  EEPROM.write(200,1);
+}
+
+
 String EEPROM_readSSID()
 {
   char strln;
@@ -92,6 +76,7 @@ void EEPROM_writePassword(String aPassword)
   }
 }
 
+
 //--- __      _____ ___   ___ ___ _____   _____ ___  ---
 //--- \ \    / / __| _ ) / __| __| _ \ \ / / __| _ \ ---
 //---  \ \/\/ /| _|| _ \ \__ \ _||   /\ V /| _||   / ---
@@ -125,12 +110,13 @@ String endbox = "</select>";
   //--end
  
  String networkList =box+option+endbox;
-  String NetworkSelectForm = "<form method=\"post\" action=\"login\">SSID:<br>" + networkList + "<br>Password:<br><input name=\"password\"><br><input type=\"submit\" value=\"Save\"></form><br>";
+  String NetworkSelectForm = "<form method=\"post\" action=\"login\">SSID:" + EEPROM_readSSID() + "<br>" + networkList + "<br>Password:<br><input name=\"password\"><br><input type=\"submit\" value=\"Save\"></form><br>";
   server.send(200, "text/html", NetworkSelectForm);
 }
 
 void handleLogin()
 {
+   
   ssid = server.arg("ssid");  
   password = server.arg("password");
   
@@ -138,31 +124,92 @@ void handleLogin()
   Serial.println(password);
 
   EEPROM_writeSSID(ssid);
-  EEPROM_writePassword(password);   
+  EEPROM_writePassword(password);
+  EEPROM_setInitialised();
   EEPROM.commit();
   //sending HTML website with confirmation
-  String DataRecieved = "Saved network:" + ssid + " pass:" +  password;
+  String DataRecieved = "Saved network:" + EEPROM_readSSID() + " pass:" +  EEPROM_readPassword();
   server.send(200, "text/html", DataRecieved);
+  
   setSetupMode(false);
 }
 
+void setupServer()
+{
+  if(isServerReady == false)
+  {
+    server.on("/", handleRoot);
+    server.on("/login", handleLogin);
+    server.begin();
+    isServerReady = true;
+  }
+}
 
+//--- __      ___ ___ _  ---
+//--- \ \    / (_) __(_) ---
+//---  \ \/\/ /| | _|| | ---
+//---   \_/\_/ |_|_| |_| ---               
+void setSetupMode(bool bIsSetupMode)
+{
+  WiFi.mode(WIFI_STA);
+  WiFi.softAPdisconnect();
+  WiFi.disconnect();
+  if(bIsSetupMode)
+  {
+    setupServer();
+    WiFi.softAP(SETUP_SSID);  
+  }
+  else
+  {    
+      
 
-
+    Serial.println("CONNECTING");
+    Serial.println(ssid.c_str());
+    Serial.println(password.c_str());
+    WiFi.begin(ssid.c_str(), password.c_str());
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.print(".");
+    }
+    Serial.println("");
+    Serial.println("WiFi connected");  
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
+  }
+}
 
 //---  __  __   _   ___ _  _   ___ _    _____      __ ---
 //--- |  \/  | /_\ |_ _| \| | | __| |  / _ \ \    / / ---
 //--- | |\/| |/ _ \ | || .` | | _|| |_| (_) \ \/\/ /  ---
 //--- |_|  |_/_/ \_\___|_|\_| |_| |____\___/ \_/\_/   ---
+
+
+const int buttonPin = 5;     // the number of the pushbutton pin
+const int ledPin =  4;      // the number of the LED pin
+
+// variables will change:
+int buttonState = 0;
+
+
 void setup() {  
+
+  // initialize the LED pin as an output:
+  pinMode(ledPin, OUTPUT);
+  // initialize the pushbutton pin as an input:
+  pinMode(buttonPin, INPUT);
+
+
+  
   delay(1000);
+  
   Serial.begin(115200);
+  Serial.println("siemano");
 
 //--look for avalible networks - hubert 20-02-17
 // Set WiFi to station mode and disconnect from an AP if it was previously connected
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
-  delay(100);
+  delay(1000);
 
   Serial.println("Setup done");
 
@@ -172,28 +219,9 @@ void setup() {
   ssid                = EEPROM_readSSID();
   password            = EEPROM_readPassword();
 
-  Serial.println("");
-  Serial.println("siemandero");
-  Serial.println(ssid);
-  Serial.println(password);
-
-  setSetupMode(true);
-  /* You can remove the password parameter if you want the AP to be open. */
-  //IPAddress myIP = WiFi.softAPIP();
-  //Serial.print("AP IP address: ");
-  //Serial.println(myIP);
-  server.on("/", handleRoot);
-  server.on("/login", handleLogin);
-  server.begin();
-  //Serial.println("HTTP server started");
+setSetupMode(EEPROM_isInitialised() == false);
+  
 }
-
 void loop() {
-  
- 
-
-  
-	server.handleClient();
-
-  
+      server.handleClient();
 }
